@@ -37,7 +37,11 @@ namespace FhirClient.Controllers
 				}
 				else
 				{
-					result = client.Search<Patient>();
+					var q = new SearchParams()
+						.Where("name=ParamTest")
+						.LimitTo(100);
+					//q.Add("birthdate", "lt2014-01-01");
+					result = client.Search<Patient>(q);
 				}
 
 				if (result.Entry != null)
