@@ -1,5 +1,3 @@
-using System;
-
 namespace FhirClient.Models
 {
     public class ErrorViewModel

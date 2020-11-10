@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using FhirClient.Models;
@@ -23,152 +22,157 @@ namespace FhirClient.Controllers
             Configuration = config;
         }
 
-        public async Task<IActionResult> Index()
-        {
-            var client = await GetClientAsync();
-            Bundle result = null;
-            List<Patient> patientResults = new List<Patient>();
+		public IActionResult Index()
+		{
+			var client = GetClient();
+			List<Patient> patientResults = new List<Patient>();
 
-            try {
-                if (!String.IsNullOrEmpty(Request.Query["ct"]))
-                {
-                    string cont = Request.Query["ct"];
-                    result = client.Search<Patient>(new string [] { $"ct={cont}"});
-                }
-                else
-                {
-                    result = client.Search<Patient>();
-                }
-                
-                if (result.Entry != null) {
-                    foreach (var e in result.Entry)
-                    {
-                        patientResults.Add((Patient)e.Resource);
-                    }
-                }
+			try
+			{
+				Bundle result;
+				if (!String.IsNullOrEmpty(Request.Query["ct"]))
+				{
+					string cont = Request.Query["ct"];
+					result = client.Search<Patient>(new string[] { $"ct={cont}" });
+				}
+				else
+				{
+					result = client.Search<Patient>();
+				}
 
-                if (result.NextLink != null) {
-                    ViewData["NextLink"] = result.NextLink.PathAndQuery;
-                }
+				if (result.Entry != null)
+				{
+					foreach (var e in result.Entry)
+					{
+						patientResults.Add((Patient)e.Resource);
+					}
+				}
 
-            } 
-            catch (Exception e)
-            {
-                ViewData["ErrorMessage"] = e.Message;
-            } 
+				if (result.NextLink != null)
+				{
+					ViewData["NextLink"] = result.NextLink.PathAndQuery;
+				}
 
-            return View(patientResults);
-        }
+			}
+			catch (Exception e)
+			{
+				ViewData["ErrorMessage"] = e.Message;
+			}
 
-        [HttpGet("/Patient/{id}")]
-        public async Task<IActionResult> Details(string id)
-        {
-            var client = await GetClientAsync();
-            PatientRecord patientRecord = new PatientRecord();
+			return View(patientResults);
+		}
 
-            try
-            {
-                var patientResult = client.Search<Patient>(new string [] { $"_id={id}"});
-                if ((patientResult.Entry != null) && (patientResult.Entry.Count > 0))
-                {
-                    patientRecord.Patient = (Patient)(patientResult.Entry[0].Resource);
-                }
+		[HttpGet("/Patient/{id}")]
+		public IActionResult Details(string id)
+		{
+			var client = GetClient();
+			PatientRecord patientRecord = new PatientRecord();
 
-                if (patientRecord.Patient != null)
-                {
-                    patientRecord.Observations = new List<Observation>();
-                    var observationResult = client.Search<Observation>(new string [] { $"subject=Patient/{patientRecord.Patient.Id}"});
+			try
+			{
+				var patientResult = client.Search<Patient>(new string[] { $"_id={id}" });
+				if ((patientResult.Entry != null) && (patientResult.Entry.Count > 0))
+				{
+					patientRecord.Patient = (Patient)(patientResult.Entry[0].Resource);
+				}
 
-                    while (observationResult != null) {
-                        foreach (var o in observationResult.Entry)
-                        {
-                            patientRecord.Observations.Add((Observation)o.Resource);
-                        }
-                        observationResult = client.Continue(observationResult);
-                    }
+				if (patientRecord.Patient != null)
+				{
+					patientRecord.Observations = new List<Observation>();
+					var observationResult = client.Search<Observation>(new string[] { $"subject=Patient/{patientRecord.Patient.Id}" });
 
-                    patientRecord.Encounters = new List<Encounter>();
-                    var encounterResult = client.Search<Encounter>(new string [] { $"subject=Patient/{patientRecord.Patient.Id}"});
+					while (observationResult != null)
+					{
+						foreach (var o in observationResult.Entry)
+						{
+							patientRecord.Observations.Add((Observation)o.Resource);
+						}
+						observationResult = client.Continue(observationResult);
+					}
 
-                    while (encounterResult != null) {
-                        foreach (var e in encounterResult.Entry)
-                        {
-                            patientRecord.Encounters.Add((Encounter)e.Resource);
-                        }
-                        encounterResult = client.Continue(encounterResult);
-                    }
+					patientRecord.Encounters = new List<Encounter>();
+					var encounterResult = client.Search<Encounter>(new string[] { $"subject=Patient/{patientRecord.Patient.Id}" });
 
-                }
-            }
-            catch (Exception e)
-            {
-                ViewData["ErrorMessage"] = e.Message;
-            }
+					while (encounterResult != null)
+					{
+						foreach (var e in encounterResult.Entry)
+						{
+							patientRecord.Encounters.Add((Encounter)e.Resource);
+						}
+						encounterResult = client.Continue(encounterResult);
+					}
 
-            return View(patientRecord);
-        }
+				}
+			}
+			catch (Exception e)
+			{
+				ViewData["ErrorMessage"] = e.Message;
+			}
+
+			return View(patientRecord);
+		}
 
 
-        [HttpPost]
-        public async Task<IActionResult> Create(PatientInfo model)
-        {
+		[HttpPost]
+		public IActionResult Create(PatientInfo model)
+		{
 			string message;
 
 			if (ModelState.IsValid)
-            {
-                var human = new HumanName
-                {
-                    Use = HumanName.NameUse.Official,
-                    Prefix = new string[] { "Mr" },
-                    Given = new string[] { model.Name },
-                    Family = model.Surname
-                };
+			{
+				var human = new HumanName
+				{
+					Use = HumanName.NameUse.Official,
+					Prefix = new string[] { "Mr" },
+					Given = new string[] { model.Name },
+					Family = model.Surname
+				};
 
-                var patientIdentifier = new Identifier
-                {
-                    System = "http://ns.electronichealth.net.au/id/hi/ihi/1.0",
-                    Value = "8003608166690503"
-                };
+				var patientIdentifier = new Identifier
+				{
+					System = "http://ns.electronichealth.net.au/id/hi/ihi/1.0",
+					Value = "8003608166690503"
+				};
 
-                var patient = new Patient
+				var patient = new Patient
 				{
 					Name = new List<HumanName>
-				    {
-					    human
-				    },
-                    Identifier = new List<Identifier>
 					{
-                        patientIdentifier
+						human
+					},
+					Identifier = new List<Identifier>
+					{
+						patientIdentifier
 					}
 				};
 
-                var client = await GetClientAsync();
-                var createdPatient = client.Create(patient);
+				var client = GetClient();
+				var createdPatient = client.Create(patient);
 
-                var fhirXmlSerializer = new FhirXmlSerializer();
-                var xml = fhirXmlSerializer.SerializeToString(createdPatient, SummaryType.False);
-                var xDoc = XDocument.Parse(xml);
+				var fhirXmlSerializer = new FhirXmlSerializer();
+				var xml = fhirXmlSerializer.SerializeToString(createdPatient, SummaryType.False);
+				var xDoc = XDocument.Parse(xml);
 
-                message = "Name " + model.Name + " Family Name " + model.Surname.ToString() + " created successfully" + "\n" + xDoc.ToString();
-            }
-            else
-            {
-                message = "Failed to create the product. Please try again";
-            }
+				message = "Name " + model.Name + " Family Name " + model.Surname.ToString() + " created successfully" + "\n" + xDoc.ToString();
+			}
+			else
+			{
+				message = "Failed to create the product. Please try again";
+			}
 
-            return Content(message);
-        }
+			return Content(message);
+		}
 
-        private async Task<Hl7.Fhir.Rest.FhirClient> GetClientAsync()
-        {
-            var client = new Hl7.Fhir.Rest.FhirClient(Configuration["FhirServerUrl"]);
-            string token = null;// await _easyAuthProxy.GetAadAccessToken();
-            client.OnBeforeRequest += (object sender, BeforeRequestEventArgs e) =>
-            {
-                e.RawRequest.Headers.Add("Authorization", $"Bearer {token}");
-            };
-            client.PreferredFormat = ResourceFormat.Json;
-            return client;
-        }
-    }
+		private Hl7.Fhir.Rest.FhirClient GetClient()
+		{
+			var client = new Hl7.Fhir.Rest.FhirClient(Configuration["FhirServerUrl"]);
+			string token = null;// await _easyAuthProxy.GetAadAccessToken();
+			client.OnBeforeRequest += (object sender, BeforeRequestEventArgs e) =>
+			{
+				e.RawRequest.Headers.Add("Authorization", $"Bearer {token}");
+			};
+			client.PreferredFormat = ResourceFormat.Json;
+			return client;
+		}
+	}
 }
