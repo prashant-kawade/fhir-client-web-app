@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using FhirClient.Models;
 using FhirClient.Services;
@@ -10,7 +6,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace FhirClient.Controllers
 {
-    public class HomeController : Controller
+	public class HomeController : Controller
     {
         private IEasyAuthProxy _easyAuthProxy { get; set; }
         private IConfiguration Configuration { get; set; }

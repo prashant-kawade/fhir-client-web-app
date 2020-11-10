@@ -12,9 +12,10 @@
 
 @if (!String.IsNullOrEmpty((string)ViewData["NextLink"]))
 {
-<p><a href="@ViewData["NextLink"]">NEXT</a></p>
+@*<p><a href="@ViewData["NextLink"]">NEXT</a></p>*@
 
 }
+<br />
 <form action="/patient/create" method="post">
     <label for="Name">Name</label>
     <input type="text" name="Name" />
@@ -24,6 +25,7 @@
 
     <input type="submit" name="submit" />
 </form>
+<br/>
 <table class="table">
     <thead>
         <tr>
@@ -53,7 +55,7 @@
             </td>
             <td>
                 <a href="/Patient/@item.Id">[Details]</a> 
-                <a href="/Resource/Patient/@item.Id">[FHIR]</a> 
+                @*<a href="/Resource/Patient/@item.Id">[FHIR]</a>*@ 
             </td>
         </tr>
 }

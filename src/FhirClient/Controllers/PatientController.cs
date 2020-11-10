@@ -153,7 +153,7 @@ namespace FhirClient.Controllers
 				var xml = fhirXmlSerializer.SerializeToString(createdPatient, SummaryType.False);
 				var xDoc = XDocument.Parse(xml);
 
-				message = "Name " + model.Name + " Family Name " + model.Surname.ToString() + " created successfully" + "\n" + xDoc.ToString();
+				message = "Name: " + model.Name + ", with  Family Name: " + model.Surname.ToString() + " was created successfully" + "\n\n\n" + xDoc.ToString();
 			}
 			else
 			{
